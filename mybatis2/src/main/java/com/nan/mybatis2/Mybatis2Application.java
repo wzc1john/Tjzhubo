@@ -15,7 +15,6 @@ import org.springframework.context.annotation.ImportResource;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 @MapperScan(value = "com.nan.mybatis2.mapper")
-
 @SpringBootApplication
 
 
