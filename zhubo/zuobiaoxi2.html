@@ -1,0 +1,149 @@
+<html>
+
+<head>
+  <title>斜抛运动方程变量关系探究</title>
+<!--  <meta content="text/html; charset=utf-8" http-equiv="Content-Type">-->
+    <meta http-equiv="Access-Control-Allow-Origin" content="*" charset="utf-8"/>
+    <link rel="stylesheet" href="font-awesome-4.7.0/css/font-awesome.min.css" />
+
+  <style>
+      #text{
+          position: relative;
+          left: 30%;
+      }
+      #setOptions{
+          position: absolute;
+          left: 45%;
+          top:75%
+
+      }
+    #testDiv {
+      background-color: buttonface;
+      background-repeat: repeat;
+      background-attachment: scroll;
+      color: #3969A5;
+      height:700px;
+      width: 1250px;
+      overflow: hidden;
+      z-index: 2;
+      border: 2px outset white;
+      margin: 0px;
+      padding: 2px;
+      background-position: 0% 50%
+    }
+    /*body {*/
+    /*  font-family: Verdana;*/
+    /*  font-size: 9pt;*/
+    /*}*/
+    #innerNice {
+      background-color: white;
+      background-repeat: repeat;
+      background-attachment: scroll;
+      color: #3969A5;
+      height: 90%;
+      width: 100%;
+      overflow: auto;
+      border: 2px inset white;
+      padding: 8px;
+      background-position: 0% 50%;
+      /*最上面的灰色*/
+      margin-top: 3%;
+    }
+    #drag {
+      position: absolute;
+      background: #0000CC;
+      top: 100px;
+      left: 200px;
+      padding: 0;
+      /*height: 100px;*/
+      /*width: 100px;*/
+    }
+    .button{
+      position: center;
+    }
+  </style>
+
+  <meta content="Microsoft FrontPage 4.0" name="GENERATOR">
+  <meta name="ProgId" content="FrontPage.Editor.Document">
+</head>
+
+<body>
+
+
+
+<h3  style="text-align: center;font-size: 15px;font-weight: bolder;position: absolute;left: 17%;top: 20%">请写出"波长对实验结果的的影响"（必填）
+</h3>
+<textarea id="text1" style="font-size: 20px ;position: absolute;left: 10%;top:30%" rows=3 cols=40; ></textarea>
+
+<h3  style="text-align: center;font-size: 15px;font-weight: bolder;position: absolute;left: 55%;top: 20%">请写出"频率与波长的关系"（必填）</h3>
+<textarea id="text2" style="font-size: 20px ;position: absolute;left: 50%;top:30%" rows=3 cols=40; ></textarea>
+
+<h3  style="text-align: center;font-size: 15px;font-weight: bolder;position: absolute;left: 17%;top:50%">请写出"线密度和波长的关系"（必填）</h3>
+<textarea id="text3" style="font-size: 20px ;position: absolute;left: 10%;top:60%" rows=3 cols=40; ></textarea>
+
+<h3  style="text-align: center;font-size: 15px;font-weight: bolder;position: absolute;left: 55%;top:50%">请写出"张力和波长的关系"（必填）</h3>
+<textarea id="text4" style="font-size: 20px ;position: absolute;left: 50%;top:60%" rows=3 cols=40; ></textarea>
+<button id="setOptions";style="text-align: center;font-size: 15px;font-weight: bolder;">提交结论</button>
+<h3 id="jieshu" style="display:none;position: absolute;left: 45%;top:79%">恭喜你完成实验!!</h3>
+<!--    <canvas class="canvas" id="twoCanvas" width="1250" height="500"></canvas>-->
+
+</body>
+
+<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+
+<script>
+
+
+  //接收用户信息
+  var jsonData3 = JSON.parse(window.name);
+  // console.log(jsonData3.userid3,jsonData3.username3,jsonData3.sss);
+  var user_id=jsonData3.userid3;
+  var user_name=jsonData3.username3;
+  // var ss=jsonData3.sss;
+  $("#setOptions").click(function (event) {
+      document.getElementById('setOptions').style.pointerEvents="none"
+      if(document.getElementById("text1").value==''||document.getElementById("text2").value==''||document.getElementById("text3").value==''||document.getElementById("text4").value==''){
+          alert('请输入实验结论')
+      }else{
+          document.getElementById("jieshu").style.display="inline";
+          /* 与后台通信 */
+          $.ajax({
+              url:'http://121.4.82.48:8085/text',
+              type:'POST',
+              data:{
+                  "text1":document.getElementById("text1").value,
+                  "text2":document.getElementById("text2").value,
+                  "text3":document.getElementById("text3").value,
+                  "text4":document.getElementById("text4").value,
+                  'user_id':user_id,
+                  // 'success':ss,
+              },
+              success() {
+                  // console.log(document.getElementById("text").value,user_id,ss+"提交的结论");
+              },
+              error(){
+                  console.log('失败')
+              }
+
+          })
+      }
+
+      // $.ajax({
+      //     url:'http://localhost:8082/login',
+      //     type:'POST',
+      //     data:{
+      //         "userId":user_id,
+      //         "userName":user_name,
+      //         'success':ss,
+      //     },
+      //     success() {
+      //         console.log(document.getElementById("number").value);
+      //         console.log(document.getElementById("name").value);
+      //     },
+      //     error(){
+      //         console.log("error")
+      //     }
+      // })
+  });
+</script>
+</html>

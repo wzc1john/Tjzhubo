@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--    <meta charset="utf-8">-->
+    <meta http-equiv="Access-Control-Allow-Origin" content="*" charset="utf-8"/>
+    <!--    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">-->
+    <title>驻波运动变量关系探究</title>
+    <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="layui/css/layui.css"  media="all">
+    <link rel="stylesheet" href="font-awesome-4.7.0/css/font-awesome.min.css" />
+
+    <script type="text/javascript" src="js/jquery1.8.3.min.js"></script>
+    <script type="text/javascript" src="js/parabola.js"></script>
+    <script type="text/javascript" src="js/panel.js"></script>
+    <script type="text/javascript" src="layui/layui.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/addons/p5.dom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/addons/p5.sound.min.js"></script>
+    <!--    <script src="js/sketch.js"></script>-->
+
+</head>
+<style>
+    #ground{
+        position: absolute;
+        width: 100%;
+        height: 20%;
+        top:85%;
+        background-color: darkgreen;
+    }
+    /* 2m - 16m*/
+    #panel{
+        position: absolute;bottom: 15%;left: 100px;
+        width: 100px;
+        height: 200px;
+        background: cornflowerblue;
+    }
+    .target2 {
+        animation: myfirst 1s infinite;
+    }
+    #content{
+        position: relative;
+        top:5%;
+    }
+
+
+</style>
+<body>
+<!-- 左上角按钮 -->
+<div style="font-family:'微软雅黑';float:left;position:absolute;margin:10px 20px ">
+
+<!--    <a id="stop"  href="#" >-->
+<!--        <i class="fa fa-pause fa-lg"></i> 暂停</a>-->
+    <a id="chart" target="_blank" style="display: none">
+        <i class="fa fa-area-chart fa-lg"></i> 提交实验结论</a>
+    <a id="setOptions"   style="display: none" href="#">
+        <i class="fa fa-rocket fa-lg"></i> 开始运动</a>
+    <a id="star"  target="_blank" style="display: none" onclick="xing()">
+        <i class="fa fa-star fa-lg"></i> 开始游戏</a>
+
+
+</div>
+<!-- 操作说明 -->
+<div id="content">
+    <h3>实验说明《竞赛模式》：</h3>
+    <p>1、在竞赛模式中，您有六次机会，波峰同时戳破所有气球即为挑战成功。</p>
+    <p>2、请根据游戏提示进行操作。</p>
+    <p>注：如果遇到页面中按钮点击不了的情况，请更换浏览器重新打开页面。（推荐chrome浏览器）</p>
+    <p>注：此实验不是为了测量大家的物理水平，所以竞赛模式没有戳破气球也无妨，不必重复做此实验。</p>
+    <!--    <p>注：描点图不是必做项，大家只需填写实验结论即可。实验结论主要就是写大家在实验过程中是如何如何尝试击中靶心的以及自己总结归纳出的结论。</p>-->
+</div>
+<!-- 右上角的滑块 -->
+<div id="slider-container">
+    <form class="layui-form">
+        <div class="layui-form-item">
+<!--            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">-->
+<!--                <legend style="color: #0C0C0C;font-size:15px;padding: 3px 20px" class="layui-bg-green">波长 /m</legend>-->
+<!--            </fieldset>-->
+<!--            <div class="demo-slider" id="slideTest8_1"></div>-->
+
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                <legend style="color: #0C0C0C;font-size:15px;padding: 3px 10px" class="layui-bg-green">频率 Hz</legend>
+            </fieldset>
+            <div class="demo-slider" id="slideTest8_2"></div>
+
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                <legend style="color: #0C0C0C;font-size:15px;padding: 3px 13px" class="layui-bg-green">线密度 kg/m</legend>
+            </fieldset>
+            <div class="demo-slider" id="slideTest8_3"></div>
+
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                <legend style="color: #0C0C0C;font-size:15px;padding: 3px 13px" class="layui-bg-green">张力 N</legend>
+            </fieldset>
+            <div class="demo-slider" id="slideTest8_4"></div>
+
+        </div>
+    </form>
+</div>
+
+<img id="墙壁" src="imgs/qiangbi.png" width="100px" height="500" style="position: absolute;top:20%;left: 3%" >
+
+<h2 style="font-size:28px; width:650px;position: absolute;top:1%;left:42%;font-family:'微软雅黑';">您有六次机会，同时戳破所有小球即挑战成功！</h2>
+
+<h3 id="failure" style="font-size:25px;font-family:'微软雅黑';position: absolute;top:15%;left:47%;display: none;" >挑战失败!请点击"开始游戏"重新挑战</h3>
+<h3 id="failure2" style="font-size:25px;font-family:'微软雅黑';position: absolute;top:26%;left:47%;display: none;" >挑战失败!请点击《提交结论》，填写实验结论</h3>
+<h3 id="failure3" style="font-size:25px;font-family:'微软雅黑';position: absolute;top:26%;left:47%;display: none;" >非常接近成功！再试一下！</h3>
+<h3 id="failure4" style="font-size:25px;font-family:'微软雅黑';position: absolute;top:26%;left:47%;display: none;" >游戏失败！请点击《开始游戏》后提交实验结论</h3>
+<h3 id="endless" style="font-size:25px;font-family:'微软雅黑';position: absolute;top:26%;left:47%;display: none;" >记得填写实验结论哦～</h3>
+<h3 id="success" style="font-size:25px;font-family:'微软雅黑';position: absolute;top:26%;left:47%;display: none" >挑战成功!请点击《开始游戏》后填写实验结论</h3>
+<h3 id="success2" style="font-size:25px;font-family:'微软雅黑';position: absolute;top:26%;left:47%;display: none" >记得填写实验结论哦～</h3>
+<img id="jiayou" src="imgs/jiayou.png"style="position: absolute;top:6%;left:60%;display: none" width="200px" height="200px">
+<img id="img1"src="imgs/xing.png" style="position: absolute;left: 45%;top:8%">
+<img id="img2"src="imgs/xing.png" style="position: absolute;left: 50%;top:8%">
+<img id="img3"src="imgs/xing.png" style="position: absolute;left: 55%;top:8%">
+<img id="img4"src="imgs/xing.png" style="position: absolute;left: 60%;top:8%">
+<img id="img5"src="imgs/xing.png" style="position: absolute;left: 65%;top:8%">
+<img id="img6"src="imgs/xing.png" style="position: absolute;left: 70%;top:8%">
+<img id="sahua" src="imgs/sahua.png"style="position: absolute;top:6%;left:60%;display: none" width="200px" height="200px">
+<h3 id="tishi1" style="font-size:20px;position: absolute;left: 46%;top:20%;display: none">游戏开始，请点击"开始游戏"按钮</h3>
+<h3 id="tishi2" style="font-size:20px;position: absolute;left: 46%;top:20%;display: none">请在调节变量滑块后，点击"开始运动"按钮<br/>
+    波峰同时戳破所有气球即为挑战成功</h3>
+<script type="text/javascript">
+    var i=0;
+
+    $("body").click(function (event) {
+        var pos = getMousePos(event);
+        // alert(pos.y)
+    });
+    function getMousePos(event) {
+        var e = event || window.event;
+        var scrollX = document.documentElement.scrollLeft || document.body.scrollLeft;
+        var scrollY = document.documentElement.scrollTop || document.body.scrollTop;
+        var x = e.pageX || e.clientX + scrollX;
+        var y = e.pageY || e.clientY + scrollY;
+        return { x, y };
+    }
+    //y1 = Acos(wt-kx) k=2*pi/波长
+    //y2 = Acos(wt+kx)
+
+    //合成波： y= y1 + y2 = 2Acos(kx)cos(wt)
+
+    let points = new Array();
+    let t = 1;
+    let inct = Math.PI/130;
+    let len;
+
+    var v0=20,firstAngle=0;mm=1;
+    var rate=2,density=5,tension=500;
+    var tryArray=new Array();   // 存取每次运动的数据
+    var fashe=false;
+    var extent=1/(rate*10)*Math.sqrt(density/tension)
+
+    // var llqheight=document.body.clientHeight;//浏览器宽度
+    // var llqwidth=document.body.clientWidth;//浏览器宽度
+    // var ballon1Height=llqheight*0.2 //高158 790*0.2
+    // var ballon1Width=llqwidth*0.15 //宽216   1440*0.15
+    // var sizex=150; //图片尺寸
+    // var sizey=150;
+    // var pointxmin=ballon1Width+0.42*sizex;  //气球下左边占整个图片的42%
+    // var pointxmax=ballon1Width+0.435*sizex;//气球下左边占整个图片的43.5%
+
+    //接收用户信息
+    var jsonData2 = JSON.parse(window.name); //将window.name转化为json对象
+    // console.log(jsonData2.userid2,jsonData2.username2);
+    var user_id=jsonData2.userid2;
+    var user_name=jsonData2.username2;
+    var ss=0;
+
+    var shuzu1=new Array();
+    var shuzu2=new Array();
+    var shuzu3=new Array();
+    var shuzu4=new Array();
+
+    layui.use('slider', function(){
+        var $ = layui.$
+            ,slider = layui.slider;
+
+        //波长
+        slider.render({
+            elem: '#slideTest8_1'
+            ,input: true
+            ,min:10
+            ,max:100
+            ,value:50
+            ,change: function(value){
+                shuzu1.push(value);
+                let tmp = width/2+10*(value-55);
+                if(tmp>=width/2){
+                    len = tmp>width?width:tmp;
+                }
+                else{
+                    len = tmp>50?tmp:50;
+                }
+            }
+        });
+        //频率
+        slider.render({
+            elem: '#slideTest8_2'
+            ,input: true //输入框
+            ,min:1
+            ,max:5
+            ,value:2
+            ,change: function(value){
+                shuzu2.push(value);
+            }
+        });
+        //线密度
+        slider.render({
+            elem: '#slideTest8_3'
+            ,input: true //输入框
+            ,min:1
+            ,max:10
+            ,value:5
+            ,change: function(value){
+                shuzu3.push(value);
+            }
+        });
+        // 张力
+        slider.render({
+            elem: '#slideTest8_4'
+            ,input: true //输入框
+            ,min:100
+            ,max:1000
+            ,value:500
+            ,change: function(value){
+                shuzu4.push(value);
+            }
+        });
+    });
+
+    // 滑块拉完后的变化
+    $(function(){
+        $(document).on('mouseup',(function(){
+
+            $(document).off('mousemove')
+            if(shuzu1.length==0){
+                extent=50;
+            }
+            else{
+                extent=shuzu1[shuzu1.length-1];
+
+
+            }
+            if(shuzu2.length==0){
+                rate=2;
+            }
+            else{
+                rate=shuzu2[shuzu2.length-1];
+            }
+            if(shuzu3.length==0){
+                density=5;
+            }
+            else{
+                density=shuzu3[shuzu3.length-1];
+            }
+            if(shuzu4.length==0){
+                tension=500;
+            }
+            else{
+                tension=shuzu4[shuzu4.length-1];
+            }
+
+        }));
+    });
+
+
+    let ballon1;
+    let ballon2;
+    var ball;
+    var imgBuffer = new Array();
+    var imgTime = new Array();
+    var imgTime1 = new Array();
+
+    var curStatus = true;
+
+
+
+
+
+
+    function preload(){
+        ball = loadImage('imgs/ball.jpeg');
+    }
+
+    function setup(){
+        createCanvas(2000,600);
+        setTimeout(function(){ noLoop(),tishi1()}, 1000);
+
+        background(0,0.5);
+        len = width/2;
+        for(let i=0;i<width;i++){
+            points.push({
+                x:i,
+                // y:200+100*Math.sin(i*(Math.PI/400)) //200是偏移,100是放大倍数
+                y:150+f(25,rate/10,t,tension,density,i)
+            });
+        };
+
+
+
+    }
+
+
+    function draw(){
+        background(255);
+        t += inct;
+        // fill(0);
+        stroke(color(0, 0, 255));
+        strokeWeight(4);
+
+        //TODO:展示 鼠标点击增加的气球
+        for(let i=0;i<imgBuffer.length;i++){
+            imgBuffer[i].generate();
+        }
+
+        for(let k=0;k<len;k++){
+            points[k].y = 150+f(25,rate/10,t,tension,density ,k) //纵坐标随t在变化
+            if(k!=0){
+                line(points[k-1].x,points[k-1].y,points[k].x,points[k].y)
+            }
+            //TODO:数组元素
+            var count = 0;
+            for(let i=0;i<imgBuffer.length;i++){
+                if(imgBuffer[i].isCircleTouched(points[k])){
+                    count++;
+                    imgBuffer.splice(i,1)
+                    if(count==2){
+                        imgBuffer.splice(0);
+                        break;
+                    }
+                }
+            }
+        }
+        if(curStatus){
+            if(imgTime.length!=0){
+                curStatus = false;
+                if(imgTime.length===2&&imgTime[1]-imgTime[0]<300){
+                    console.log(imgTime.length+'ss')
+                    document.getElementById("success").style.display="block";
+                    document.getElementById("sahua").style.display="block";
+                    document.getElementById('star').style.display="inline";
+                    $("#star").click(function (event) {
+                        document.getElementById('chart').style.display="inline";
+                        document.getElementById("setOptions").style.display="none";
+                        document.getElementById("tishi2").style.display="none";
+                        document.getElementById("success2").style.display="inline";
+                    });
+                    //数据清零
+                    // shuzu1.length = 0;
+                    // shuzu2.length = 0;
+                    // shuzu3.length = 0;
+                    // shuzu4.length = 0;
+                    imgTime.length = 0;
+                    ss=1;
+                    document.getElementById("setOptions").style.display="none";
+                    setTimeout(function (){
+                        noLoop();
+                    },800)
+                } else if(imgTime.length!=2){
+                    document.getElementById("failure").style.display="block";
+                    //开始运动按钮消失
+                    document.getElementById("setOptions").style.display="none";
+                    //数据清零
+                    // shuzu1.length = 0;
+                    // shuzu2.length = 0;
+                    // shuzu3.length = 0;
+                    // shuzu4.length = 0;
+                    imgTime.length = 0;
+                    //2s后停止波动
+                    setTimeout(function (){
+                        noLoop();
+                        //开始游戏按钮
+                        document.getElementById("star").style.display="inline";
+                    },800)
+                    $("#star").click(function (event) {
+                        document.getElementById("star").style.display="none";
+                    });
+                    if(i===6){
+                        document.getElementById("failure").style.display="none";
+                        document.getElementById("failure4").style.display="block";
+                        document.getElementById("jiayou").style.display="block";
+                        document.getElementById("star").style.display="none";
+                        // document.getElementById('star').style.pointerEvents="none"
+                        // document.getElementById("failure4").style.display="none";
+                        document.getElementById("setOptions").style.display="none";
+                        // document.getElementById('chart').style.display="inline";
+                        $("#star").click(function (event) {
+                            document.getElementById('chart').style.display="inline";
+                            document.getElementById("setOptions").style.display="none";
+                            document.getElementById("failure4").style.display="none";
+                            document.getElementById("tishi2").style.display="none";
+                            document.getElementById("endless").style.display="inline";
+                        });
+                    }
+                }
+                else{
+                    //TODO:非常接近成功！但不是同时戳破的！
+                    //开始运动按钮消失
+                    document.getElementById("setOptions").style.display="none";
+                    document.getElementById("failure3").style.display="block";
+                    imgTime.length=0
+                    setTimeout(function (){
+                        noLoop();
+                        if(i<6){
+                            document.getElementById("star").style.display="inline";
+                        }
+                        else{
+                            document.getElementById("jiayou").style.display="block";
+                            document.getElementById("failure").style.display="block";
+                            document.getElementById("star").style.display="none";
+                            document.getElementById("failure3").style.display="none";
+                            document.getElementById('chart').style.display="inline";
+                            document.getElementById("setOptions").style.display="none";
+                        }
+                    },800)
+                }
+            }
+        }
+
+
+    }
+
+    //驻波公式
+    function f(A,f,t,F,p,x){
+        //A=25,f=1,t,F=10 p=10;
+        return 2*A*Math.cos(2*Math.PI*f*t)*Math.cos(2*Math.PI*f/Math.sqrt(F/p)*x+Math.PI/2)
+    }
+
+
+
+    //TODO:封装了一个类。可以是气球，可以是星星。
+    class IMAGE{
+        constructor(img,x,y,height,width) {
+            this.img = img;
+            this.x = x;//中心横坐标
+            this.y = y;//中心纵坐标
+            this.height = height;
+            this.width = width;
+        }
+        generate(){
+            image(this.img,this.x-this.width/2,this.y-this.height/2,this.height,this.width);
+        }
+        //TODO:如果一个点在该对象的范围内
+        //TODO:如果是判断当前的气球的最下面（不包括气球的绳），不是判断照片，那就找图片工具，看一下图片的比例，然后更改下面的判断范围即可
+        //TODO：如果你只想判断那个尖戳破的，那你就只判断会到达波峰的点是否在图片范围内，而不是波峰的点碰到最下面的点（这句话你好好理解一下：结合昨天晚上23：36发的图片）。
+
+        //正方形范围
+        isTouched(point){
+            if(point.x>this.x-this.width/2&&point.x<this.x+this.width/2&&point.y>this.y-this.height/2&&point.y<this.y+this.height/2){
+                return true;
+            }
+        }
+        //圆形范围
+        isCircleTouched(point){
+            let y = this.circle(this.x,this.y,this.width/2,point.x)
+            if(point.x>=this.x-this.width/2&&point.x<=this.x+this.width/2&&point.y>=y.y2&&point.y<=y.y1){
+                var d = new Date();
+                var min = (d.getMinutes() < 10) ? ("0" + d.getMinutes()) : d.getMinutes();
+                var sec = (d.getSeconds() < 10) ? ("0" + d.getSeconds()) : d.getSeconds();
+                var milisec = (d.getMilliseconds() < 10) ? ("0" + d.getMilliseconds()) : d.getMilliseconds();
+                var time=milisec*1000+min*60+sec;
+                imgTime.push(time);
+                // alert(imgTime)
+                return true;
+            }
+
+        }
+
+        //圆的纵坐标
+        circle(x0,y0,r,x){
+            return {
+                y1:y0 + Math.sqrt(Math.pow(r,2)-Math.pow(x-x0,2)),
+                y2:y0 - Math.sqrt(Math.pow(r,2)-Math.pow(x-x0,2))
+            }
+        }
+    }
+
+
+
+//开始运动
+    $("#setOptions").click(function (event) {
+
+        document.getElementById("tishi2").style.display="none";
+        document.getElementById("failure").style.display="none";
+        document.getElementById("failure2").style.display="none";
+        document.getElementById("failure3").style.display="none";
+        document.getElementById("success").style.display="none";
+        fashe=true;
+        //变量数据清零
+        // shuzu1.length = 0;
+        // shuzu2.length = 0;
+        // shuzu3.length = 0;
+        // shuzu4.length = 0;
+        imgTime.length = 0;
+
+        //SeanYaoo 2021-06-02
+        imgBuffer.splice(0)
+        let  tmp = new IMAGE(ball,145,81,40,40);
+        let  tmp2 = new IMAGE(ball,610,81,40,40);
+        imgBuffer.push(tmp);
+        imgBuffer.push(tmp2);
+        loop();
+        curStatus = true;
+
+        if(fashe){
+            if(isNaN(shuzu1[shuzu1.length-1])){
+                shuzu1[shuzu1.length-1]=50;
+            }
+            if(isNaN(shuzu2[shuzu2.length-1])){
+                shuzu2[shuzu2.length-1]=2;
+            }
+            if(isNaN(shuzu3[shuzu3.length-1])){
+                shuzu3[shuzu3.length-1]=5;
+            }
+            if(isNaN(shuzu4[shuzu4.length-1])){
+                shuzu4[shuzu4.length-1]=500;
+            }
+            tryArray.push(shuzu1[shuzu1.length-1],shuzu2[shuzu2.length-1],shuzu3[shuzu3.length-1],shuzu4[shuzu4.length-1]); // 3i高度，3i+1初速度，3i+2发射角度
+            // console.log(tryArray);
+            fashe=false;
+        }
+        $.ajax({
+            url:'http://121.4.82.48:8085/game',
+            type:'GET',
+            data:{
+                'extent1':shuzu1[shuzu1.length-1],
+                'rate1':shuzu2[shuzu2.length-1],
+                'density1':shuzu3[shuzu3.length-1],
+                'tension1':shuzu4[shuzu4.length-1],
+                'user_id':user_id,
+
+            },
+            success() {
+                console.log(shuzu1[shuzu1.length-1],shuzu2[shuzu2.length-1],shuzu3[shuzu3.length-1],shuzu4[shuzu4.length-1],
+                    user_id+"成功")
+            },
+            error(){
+                console.log('失败')
+            }
+        })
+
+    })
+
+//提交结论
+    $("#chart").click(function (event) {
+        // console.log(ss+"ss")
+        //点击轨迹实验打包用户信息
+        var userid3 = user_id;//获取填写的id
+        var username3 = user_name;//获取填写的name
+        var jsonData3 = {"userid3":userid3,"username3":username3}; //转化为json格式
+        window.name = JSON.stringify(jsonData3); //window.name只接受字符串格式，所以需要把json转换一下
+        $.ajax({
+            url:'http://121.4.82.48:8085/login',
+            type:'POST',
+            data:{
+                "userId":user_id,
+                "userName":user_name,
+                'success':ss,
+                'chance':i,
+            },
+            success() {
+                console.log(user_id+user_name+ss+"登录信息");
+            },
+            error(){
+                console.log('error')
+            }
+        })
+        window.location="zuobiaoxi2.html";
+    });
+
+//暂停
+    $("#stop").click(function (event) {
+        event.preventDefault();
+        noLoop();
+    });
+
+
+//开始游戏
+    $("#star").click(function (event) {
+        $.ajax({
+            url:'http://121.4.82.48:8085/length',
+            type:'GET',
+            data:{
+                'number':2-imgBuffer.length,
+                'user_id':user_id,
+            },
+            success() {
+                console.log(2-imgBuffer.length, user_id+"成功")
+            },
+            error(){
+                console.log('失败')
+            }
+        })
+        document.getElementById("tishi1").style.display="none";
+        document.getElementById("star").style.display="none";
+        //提示开始运动按钮
+        document.getElementById("tishi2").style.display="block";
+        //开始运动按钮出现
+        document.getElementById("setOptions").style.display="inline";
+        document.getElementById("failure").style.display="none";
+        document.getElementById("failure2").style.display="none";
+        document.getElementById("failure3").style.display="none";
+        document.getElementById("success").style.display="none";
+
+        curStatus = true;
+        imgBuffer.splice(0)
+        let  tmp = new IMAGE(ball,145,81,40,40);
+        let  tmp2 = new IMAGE(ball,610,81,40,40);
+        imgBuffer.push(tmp);
+        imgBuffer.push(tmp2);
+
+        //TODO:展示 鼠标点击增加的 气球
+        //TODO：1.本来展示的东西要放在draw里才能一直展示，因为是noloop状态 所以这里要额外多展示一下，然后启动loop之后，draw函数里的东西才能一直展示
+        //TODO：2.为什么会点击两次，是因为你之前代码的顺序有问题，之前是先展示，再往数组里添加东西，所以要第二次才能把第一次的东西展示出来
+        //TODO：3.底下这一块的代码要在draw里才会一直展示，否则会出现你说的情况，一旦loop启动，东西就没有了。
+        // for(let i=0;i<imgBuffer.length;i++){
+        //     imgBuffer[i].generate();
+        // }
+
+    });
+
+    function tishi1() {
+
+        document.getElementById("tishi1").style.display="block";
+        //提示1 5s后消失
+        // $('#tishi1').delay(2000).hide(0);
+        //开始游戏
+        document.getElementById("star").style.display="inline";
+        // $('#star').delay(5000).hide(0);
+    }
+
+    function xing(){
+        i++;
+        switch (i) {
+            case 1:document.getElementById('img1').style.display="none";
+                break;
+            case 2:document.getElementById('img2').style.display="none";
+                break;
+            case 3:document.getElementById('img3').style.display="none";
+                break;
+            case 4:document.getElementById('img4').style.display="none";
+                break;
+            case 5:document.getElementById('img5').style.display="none";
+                break;
+            case 6:document.getElementById('img6').style.display="none";
+                break;
+            default:
+        }
+        // //点击次数小于7次 ，可以进行发射
+        // if(i<7) {
+        //
+        // }
+        // if(i>=7){
+        //     document.getElementById("failure2").style.display="inline";
+        //     document.getElementById("star").style.display="none";
+        // }
+
+    }
+</script>
+</body>
+</html>

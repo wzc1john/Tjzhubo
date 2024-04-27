@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nan.mybatis2.mapper.OrdinaryMapper">
+    <!--    public Employee getEmpById(Integer id);
+
+     public void insertEmp(Employee employee);-->
+    <select id="getOriById" resultType="com.nan.mybatis2.bean.Ordinary">
+        SELECT * FROM ordinary WHERE id=#{id}
+    </select>
+
+    <insert id="insertOri">
+        INSERT INTO ordinary(extent,rate,density,tension,user_id) VALUES (#{extent},#{rate},#{density},#{tension},#{user_id})
+    </insert>
+
+    <insert id="insertText">
+        INSERT INTO result(text_value1,text_value2,text_value3,text_value4,user_id) VALUES (#{text1},#{text2},#{text3},#{text4},#{user_id})
+
+    </insert>
+
+    <insert id="insertLogin">
+        INSERT INTO login(log_number,log_name,success,chance) VALUES (#{userId},#{userName},#{success},#{chance})
+    </insert>
+
+    <insert id="insertGame">
+        INSERT INTO game(g_extent,g_rate,g_density,g_tension,user_id) VALUES (#{extent1},#{rate1},#{density1},#{tension1},#{user_id})
+    </insert>
+
+    <insert id="insertLength">
+        INSERT INTO length(number1,user_id) VALUES (#{number},#{user_id})
+    </insert>
+</mapper>

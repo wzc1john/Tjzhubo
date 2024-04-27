@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--    <meta charset="utf-8">-->
+    <meta http-equiv="Access-Control-Allow-Origin" content="*" charset="utf-8"/>
+    <!--    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">-->
+    <title>驻波探究实验</title>
+    <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="layui/css/layui.css"  media="all">
+    <link rel="stylesheet" href="font-awesome-4.7.0/css/font-awesome.min.css" />
+
+    <script type="text/javascript" src="js/jquery1.8.3.min.js"></script>
+    <script type="text/javascript" src="js/parabola.js"></script>
+    <script type="text/javascript" src="js/panel.js"></script>
+    <script type="text/javascript" src="layui/layui.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/addons/p5.dom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/addons/p5.sound.min.js"></script>
+    <!--        <script src="js/sketch.js"></script>-->
+
+</head>
+<style>
+    #content{
+        position: relative;
+        top:5%;
+    }
+</style>
+<body>
+<!-- 左上角按钮 -->
+<div style="font-family:'微软雅黑';float:left;position:absolute;margin:10px 20px ">
+    <!--    <a id="reset" href="#">-->
+    <!--        <i class="fa fa-eraser  fa-lg"></i> 刻度尺</a>-->
+    <a id="setOptions"  href="#">
+        <i class="fa fa-rocket fa-lg"></i> 开始运动</a>
+    <a id="stop"  href="#">
+        <i class="fa fa-pause fa-lg"></i> 暂停</a>
+    <!--    <a id="chart" target="_blank">-->
+    <!--        <i class="fa fa-area-chart fa-lg"></i> 轨迹线关系研究</a>-->
+    <a id="star"  style="display: none">
+        <i class="fa fa-star fa-lg"></i> 竞赛模式</a>
+</div>
+<!-- 操作说明 -->
+<div id="content">
+    <h3>实验说明《普通模式》：</h3>
+    <p>1、请您在《普通模式》进行驻波运动探究。</p>
+    <p>2、点击屏幕上任意一点即可放小球，请尝试调节变量滑块，使得波峰戳破小球。</p>
+    <p>3、此页面结束后，请您进入《竞赛模式》进行挑战。</p>
+    <p>注：如果遇到页面中按钮点击不了的情况，请更换浏览器重新打开页面。（推荐chrome浏览器）</p>
+</div>
+<!-- 右上角的滑块 -->
+<div id="slider-container">
+    <form class="layui-form">
+        <div class="layui-form-item">
+<!--            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">-->
+<!--                <legend style="color: #0C0C0C;font-size:15px;padding: 3px 20px" class="layui-bg-green">波长 /m</legend>-->
+<!--            </fieldset>-->
+<!--            <div class="demo-slider" id="slideTest8_1"></div>-->
+
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                <legend style="color: #0C0C0C;font-size:15px;padding: 3px 10px" class="layui-bg-green">频率 Hz</legend>
+            </fieldset>
+            <div class="demo-slider" id="slideTest8_2"></div>
+
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                <legend style="color: #0C0C0C;font-size:15px;padding: 3px 13px" class="layui-bg-green">线密度 kg/m</legend>
+            </fieldset>
+            <div class="demo-slider" id="slideTest8_3"></div>
+
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                <legend style="color: #0C0C0C;font-size:15px;padding: 3px 13px" class="layui-bg-green">张力 N</legend>
+            </fieldset>
+            <div class="demo-slider" id="slideTest8_4"></div>
+
+        </div>
+    </form>
+</div>
+<!--<img id="qiqiu" src="imgs/qiqiu.png" width="200px" height="400px" style="position: absolute;left: 50%;top:7.5%" >-->
+<!--<img id="po" src="po.jpeg" width="200px" height="400px" style="position:absolute;left: 50%;top:7.5%;display: none">-->
+<img id="墙壁" src="imgs/qiangbi.png" width="100px" height="500" style="position: absolute;top:20%;left: 3%" >
+
+
+<script type="text/javascript">
+    var jsonData = JSON.parse(window.name); //将window.name转化为json对象
+    var user_id=jsonData.userid;
+    var user_name=jsonData.username;
+
+
+    $("body").click(function (event) {
+        var pos = getMousePos(event);
+        // alert(pos.y)
+    });
+    function getMousePos(event) {
+        var e = event || window.event;
+        var scrollX = document.documentElement.scrollLeft || document.body.scrollLeft;
+        var scrollY = document.documentElement.scrollTop || document.body.scrollTop;
+        var x = e.pageX || e.clientX + scrollX;
+        var y = e.pageY || e.clientY + scrollY;
+        return { x, y };
+    }
+    //y1 = Acos(wt-kx) k=2*pi/波长
+    //y2 = Acos(wt+kx)
+
+    //合成波： y= y1 + y2 = 2Acos(kx)cos(wt)
+
+    let points = new Array();
+    let t = 1;
+    let inct = Math.PI/130;
+    let len;
+    let A = 25;//振幅
+
+    var rate=2,density=5,tension=500,extent=50;
+    var tryArray=new Array();   // 存取每次运动的数据
+    var fashe=false;
+    var status=false;
+
+
+
+    var shuzu1=new Array();
+    var shuzu2=new Array();
+    var shuzu3=new Array();
+    var shuzu4=new Array();
+
+    layui.use('slider', function(){
+        var $ = layui.$
+            ,slider = layui.slider;
+
+        //波长
+        slider.render({
+            elem: '#slideTest8_1'
+            ,input: true
+            ,min:10
+            ,max:100
+            ,value:50
+            ,change: function(value){
+                shuzu1.push(value);
+                let tmp = width/2+10*(value-55);
+                if(tmp>=width/2){
+                    len = tmp>width?width:tmp;
+                }
+                else{
+                    len = tmp>50?tmp:50;
+                }
+            }
+        });
+        //频率
+        slider.render({
+            elem: '#slideTest8_2'
+            ,input: true //输入框
+            ,min:1
+            ,max:5
+            ,value:2
+            ,change: function(value){
+                shuzu2.push(value);
+            }
+        });
+        //线密度
+        slider.render({
+            elem: '#slideTest8_3'
+            ,input: true //输入框
+            ,min:1
+            ,max:10
+            ,value:5
+            ,change: function(value){
+                shuzu3.push(value);
+            }
+        });
+        // 张力
+        slider.render({
+            elem: '#slideTest8_4'
+            ,input: true //输入框
+            ,min:100
+            ,max:1000
+            ,value:500
+            ,change: function(value){
+                shuzu4.push(value);
+            }
+        });
+    });
+
+    // 滑块拉完后的变化
+    $(function(){
+        $(document).on('mouseup',(function(){
+            $(document).off('mousemove')
+            if(shuzu1.length==0){
+                extent=50;
+
+            }
+            else{
+                extent=shuzu1[shuzu1.length-1];
+            }
+            if(shuzu2.length==0){
+                rate=2;
+            }
+            else{
+                rate=shuzu2[shuzu2.length-1];
+            }
+            if(shuzu3.length==0){
+                density=5;
+            }
+            else{
+                density=shuzu3[shuzu3.length-1];
+            }
+            if(shuzu4.length==0){
+                tension=500;
+            }
+            else{
+                tension=shuzu4[shuzu4.length-1];
+            }
+
+        }));
+    });
+
+
+    let ballon;
+    let btn;
+    let btn2;
+    let canvas;
+    var ball;
+    var star;
+    var imgBuffer = new Array();
+
+
+    $("#setOptions").click(function (event) {
+        document.getElementById('star').style.display='inline'
+        // img.hide();
+        fashe=true;
+        status=true;
+
+        // setTimeout(function(){ noLoop() }, 5000);
+        if(fashe){
+            if(isNaN(shuzu1[shuzu1.length-1])){
+                shuzu1[shuzu1.length-1]=50;
+            }
+            if(isNaN(shuzu2[shuzu2.length-1])){
+                shuzu2[shuzu2.length-1]=2;
+            }
+            if(isNaN(shuzu3[shuzu3.length-1])){
+                shuzu3[shuzu3.length-1]=5;
+            }
+            if(isNaN(shuzu4[shuzu4.length-1])){
+                shuzu4[shuzu4.length-1]=500;
+            }
+            tryArray.push(shuzu1[shuzu1.length-1],shuzu2[shuzu2.length-1],shuzu3[shuzu3.length-1],shuzu4[shuzu4.length-1]); // 3i高度，3i+1初速度，3i+2发射角度
+            // console.log(tryArray);
+            fashe=false;
+        }
+        $.ajax({
+            url:'http://121.4.82.48:8085/ordinary',
+            type:'GET',
+            data:{
+                'extent':shuzu1[shuzu1.length-1],
+                'rate':shuzu2[shuzu2.length-1],
+                'density':shuzu3[shuzu3.length-1],
+                'tension':shuzu4[shuzu4.length-1],
+                'user_id':user_id,
+
+            },
+            success() {
+                console.log(shuzu1[shuzu1.length-1],shuzu2[shuzu2.length-1],shuzu3[shuzu3.length-1],shuzu4[shuzu4.length-1],
+                    user_id+"成功")
+            },
+            error(){
+                console.log('失败')
+            }
+        })
+    })
+    $("#stop").click(function (event) {
+        // event.preventDefault();
+        status=false;
+    });
+    function preload(){
+        star = loadImage('imgs/xing.png');
+        ball = loadImage('imgs/ball.jpeg');
+    }
+
+    function setup(){
+
+        canvas = createCanvas(1000,600);
+        //
+        // //TODO:DOM元素
+        // btn = createButton('hide');
+        // btn.position(500,50);
+        // btn.mousePressed(hide);
+        //
+        // btn = createButton('add');
+        // btn.position(550,50);
+        // btn.mousePressed(add);
+        //
+        // //TODO:可以注释掉，留下它是为了区分数组元素
+        // ballon1 = createImg('imgs/qiqiu.png');
+        //
+        // //TODO
+        // let canvasPos = canvas.position();
+        // ballon1.position(canvasPos.x,canvasPos.y);
+        // ballon1.size(100,100);
+        //
+        //
+        // ballon2 = createImg('po.jpeg');
+        // ballon2.position(canvasPos.x,canvasPos.y);//dom元素
+        // ballon2.size(100,100);
+        // ballon2.hide();
+
+        len = width/2;
+        for(let i=0;i<width;i++){
+            points.push({
+                x:i,
+            //     function f(A,f,t,F,p,x){
+            //     //A=25,f=1,t,F=10 p=10;
+            //     return 2*A*Math.cos(2*Math.PI*f*t)*Math.cos(2*Math.PI/Math.sqrt(F/p)*x+Math.PI/2)
+            // }
+                // y:200+100*Math.sin(i*(Math.PI/400)) //200是偏移,100是放大倍数
+                y:150+f(A,rate/10,t,tension,density,i)
+            });
+        };
+
+    }
+    // var llqwidth=document.body.clientWidth;//浏览器宽度
+    // var xmin=llqwidth*0.2597//374=806(鼠标点击获取的横坐标)-1440*0.3（canvas离屏幕左边30%）
+    // var xmax=llqwidth*0.2604//375=807-1440*0.3
+    function draw(){
+
+        background(255);
+
+        //TODO:如果你要用dom元素的话，花四条线来找到你要的最低点
+        //background(255,100,55);
+        // strokeWeight(1);
+        //
+        // line(0,0,1000,0);
+        //
+        // line(0,58,1000,58);
+        //
+        // line(21,0,21,600);
+        //
+        // line(100,0,100,600);
+        if(status==="true"){
+            t += inct;
+        }
+        stroke(color(0, 0, 255));
+        strokeWeight(4);
+        //TODO:展示 鼠标点击增加的 气球
+        for(let i=0;i<imgBuffer.length;i++){
+            imgBuffer[i].generate();
+
+
+        }
+        for(let k=0;k<len;k++){
+            points[k].y = 250+f(A,rate/10,t,tension,density ,k) //纵坐标随t在变化
+            if(k!=0){
+                line(points[k-1].x,points[k-1].y,points[k].x,points[k].y)
+            }
+            //TODO:DOM元素 区分与数组元素 请你想通了与上面的dom气球一起注释掉 然后来找我道歉QAQ.
+            // if(points[k].x>20&&points[k].x<=100){
+            //     if(points[k].y<=60){
+            //         console.log(points[k].y)
+            //         hide();
+            //     }
+            // }
+            //TODO:数组元素
+            for(let i=0;i<imgBuffer.length;i++){
+                if(imgBuffer[i].isCircleTouched(points[k])){
+                    // console.log('Touched');
+                    imgBuffer.splice(i,1);
+                }
+                else{
+                    let now = new Date()
+                    if(now.getTime()-imgBuffer[i].startTime.getTime()>=1000){
+                        imgBuffer.splice(i,1);
+                    }
+                }
+            }
+        }
+
+    }
+
+    //驻波公式
+    function f(A,f,t,F,p,x){
+        //A=25,f=1,t,F=10 p=10;
+        return 2*A*Math.cos(2*Math.PI*f*t)*Math.cos(2*Math.PI*f/Math.sqrt(F/p)*x+Math.PI/2)
+    }
+
+
+    //TODO:鼠标点击事件 多点几个气球在下面看看效果
+    function mousePressed(){
+        let tmp = new IMAGE(ball,mouseX,mouseY,40,40,new Date());
+        imgBuffer.push(tmp);
+    }
+
+    //TODO:封装了一个类。可以是气球，可以是星星。
+    class IMAGE{
+        constructor(img,x,y,height,width,startTime) {
+            this.img = img;
+            this.x = x;//中心横坐标
+            this.y = y;//中心纵坐标
+            this.height = height;
+            this.width = width;
+            this.startTime = startTime
+        }
+        generate(){
+            image(this.img,this.x-this.width/2,this.y-this.height/2,this.height,this.width);
+        }
+        //TODO:如果一个点在该对象的范围内
+        //TODO:如果是判断当前的气球的最下面（不包括气球的绳），不是判断照片，那就找图片工具，看一下图片的比例，然后更改下面的判断范围即可
+        //TODO：如果你只想判断那个尖戳破的，那你就只判断会到达波峰的点是否在图片范围内，而不是波峰的点碰到最下面的点（这句话你好好理解一下：结合昨天晚上23：36发的图片）。
+
+        //正方形范围
+        isTouched(point){
+            if(point.x>this.x-this.width/2&&point.x<this.x+this.width/2&&point.y>this.y-this.height/2&&point.y<this.y+this.height/2){
+                return true;
+            }
+        }
+        //圆形范围
+        isCircleTouched(point){
+            let y = this.circle(this.x,this.y,this.width/2,point.x)
+            if(point.x>this.x-this.width/2&&point.x<this.x+this.width/2&&point.y>y.y2&&point.y<y.y1){
+                return true;
+            }
+        }
+
+        //圆的纵坐标
+        circle(x0,y0,r,x){
+            return {
+                y1:y0 + Math.sqrt(Math.pow(r,2)-Math.pow(x-x0,2)),
+                y2:y0 - Math.sqrt(Math.pow(r,2)-Math.pow(x-x0,2))
+            }
+        }
+    }
+
+    $("#star").click(function (event) {
+        // 点击竞赛模式打包用户信息
+        var userid2 = user_id;//获取填写的id
+        var username2 = user_name;//获取填写的name
+        // var sss=ss;
+        var jsonData2 = {"userid2":userid2,"username2":username2}; //转化为json格式
+        window.name = JSON.stringify(jsonData2); //window.name只接受字符串格式，所以需要把json转换一下
+        window.location.replace("competition.html");
+    })
+</script>
+</body>
+</html>
